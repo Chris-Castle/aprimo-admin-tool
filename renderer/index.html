@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aprimo Admin Tools</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #0f172a; --muted: #64748b; --border: #e2e8f0;
+    --card: #f8fafc; --primary: #2563eb; --primary-fg: #ffffff;
+    --danger: #dc2626; --danger-bg: #fef2f2; --accent: #eff6ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1120; --fg: #e2e8f0; --muted: #94a3b8; --border: #1e293b;
+      --card: #0f172a; --primary: #3b82f6; --primary-fg: #ffffff;
+      --danger: #f87171; --danger-bg: #2a1414; --accent: #0f1e3d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+         background: var(--bg); color: var(--fg); font-size: 14px; }
+  header { display: flex; align-items: center; justify-content: space-between;
+           padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+  main { padding: 20px; }
+  .muted { color: var(--muted); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+           background: var(--bg); color: var(--fg); cursor: pointer; }
+  button.primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  input[type=text], input[type=password] { font: inherit; padding: 8px 10px; border-radius: 8px;
+           border: 1px solid var(--border); background: var(--bg); color: var(--fg); width: 100%; }
+  label.field { display: block; margin-bottom: 10px; }
+  label.field span { display: block; margin-bottom: 4px; font-weight: 600; }
+  .card { border: 1px solid var(--border); border-radius: 12px; background: var(--card); padding: 16px; }
+  .err { color: var(--danger); background: var(--danger-bg); border: 1px solid var(--border);
+         border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+  .hidden { display: none !important; }
+  #tree { border: 1px solid var(--border); border-radius: 10px; max-height: 52vh; overflow: auto; background: var(--bg); }
+  .node { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-bottom: 1px solid var(--border);
+          white-space: nowrap; }
+  .node:hover { background: var(--accent); }
+  .twisty { width: 18px; text-align: center; color: var(--muted); background: none; border: none; padding: 0; }
+  .pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border);
+          background: var(--bg); color: var(--muted); cursor: pointer; }
+  .pill.on { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .spacer { flex: 1; }
+  .small { font-size: 12px; }
+  .mono { font-variant-numeric: tabular-nums; }
+  code { background: var(--accent); padding: 1px 5px; border-radius: 4px; }
+
+  /* ── Data model explorer ── */
+  .dm-panels { display: flex; flex: 1; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; min-height: 0; }
+  .dm-left { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+  .dm-left-header { padding: 10px; border-bottom: 1px solid var(--border); }
+  #dmFdList { flex: 1; overflow-y: auto; }
+  .dm-fd-item { width: 100%; text-align: left; padding: 8px 12px; border: none; border-bottom: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+  .dm-fd-item:hover { background: var(--accent); }
+  .dm-fd-item.active { background: var(--accent); border-left: 3px solid var(--primary); }
+  .dm-fd-name { font-size: 13px; font-weight: 500; }
+  .dm-badge-global { font-size: 9px; font-weight: 700; letter-spacing: .05em; color: #16a34a; background: #dcfce7; border-radius: 3px; padding: 1px 4px; }
+  .dm-right { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
+  #dmSummaryBar { padding: 8px 14px; border-bottom: 1px solid var(--border); background: var(--card); display: none; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #dmGraph { flex: 1; }
+  #dmEmpty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; text-align: center; padding: 40px; flex-direction: column; gap: 12px; }
+  #dmDetail { display: none; position: absolute; right: 0; top: 0; bottom: 0; width: 280px; border-left: 1px solid var(--border); background: var(--card); overflow-y: auto; flex-direction: column; }
+  .dm-detail-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .dm-detail-type { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .dm-row { display: flex; flex-direction: column; gap: 3px; }
+  .dm-row-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .dm-id-box { font-family: monospace; font-size: 11px; background: var(--accent); border-radius: 5px; padding: 5px 8px; word-break: break-all; user-select: all; }
+  .dm-list-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; padding: 2px 0; }
+  .dm-expr { font-family: monospace; font-size: 11px; background: var(--accent); border-radius: 5px; padding: 6px 8px; white-space: pre-wrap; word-break: break-all; margin: 0; }
+
+  /* ── Tile homepage ── */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
+  .tile { border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+          padding: 22px 20px; display: flex; flex-direction: column; gap: 10px;
+          cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .tile:hover { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
+  .tile.soon { opacity: .55; cursor: default; }
+  .tile.soon:hover { border-color: var(--border); box-shadow: none; }
+  .tile-icon { font-size: 30px; line-height: 1; }
+  .tile-title { font-size: 15px; font-weight: 700; margin: 0; }
+  .tile-desc { font-size: 13px; color: var(--muted); flex: 1; line-height: 1.5; }
+  .tile-badge { align-self: flex-start; font-size: 11px; font-weight: 600; padding: 2px 9px;
+                border-radius: 999px; background: var(--accent); color: var(--primary); }
+</style>
+</head>
+<body>
+<header>
+  <div class="row" style="gap:12px">
+    <button id="homeBtn" class="hidden" style="padding:5px 10px">← Home</button>
+    <h1 id="headerTitle">Aprimo Admin Tools</h1>
+  </div>
+  <div class="row">
+    <span id="sessionLabel" class="muted small"></span>
+    <button id="signOutBtn" class="hidden">Sign out</button>
+  </div>
+</header>
+<main>
+
+  <!-- Connect view -->
+  <section id="connectView" class="card" style="max-width:520px">
+    <h2 style="margin-top:0">Connect to Aprimo</h2>
+    <p class="muted small">Sign in happens in your browser. Register this exact redirect URI in your
+      Aprimo PKCE registration: <code id="redirectUriHint">…</code></p>
+    <label class="field"><span>Environment</span>
+      <input id="env" type="text" placeholder="your-environment (the &lt;env&gt; in &lt;env&gt;.aprimo.com)" autocomplete="off" />
+    </label>
+    <label class="field"><span>Client ID</span>
+      <input id="clientId" type="text" autocomplete="off" />
+    </label>
+    <label class="field"><span>Client Secret</span>
+      <input id="clientSecret" type="password" autocomplete="off" />
+    </label>
+    <p class="muted small" style="margin:-4px 0 12px">Your Client ID and Secret are encrypted using your OS keychain key and stored locally on this machine. They are sent only to Aprimo over HTTPS during the OAuth token exchange — never transmitted anywhere else by this application.</p>
+    <div class="row">
+      <button id="loginBtn" class="primary">Sign in</button>
+      <span id="connectStatus" class="muted small"></span>
+    </div>
+    <div id="connectErr" class="err hidden"></div>
+    <div style="margin-top:16px;padding:12px;border-radius:8px;background:var(--accent);border:1px solid var(--border)">
+      <p class="small" style="margin:0 0 6px;font-weight:600">This is a sample tool</p>
+      <p class="muted small" style="margin:0">Embedding a Client Secret in a desktop application is acceptable for internal tooling, but is not recommended for broader distribution. For production or team use, a server-side token broker that keeps the secret out of client machines is the recommended approach.</p>
+    </div>
+  </section>
+
+  <!-- Home view -->
+  <section id="homeView" class="hidden">
+    <div class="tiles">
+
+      <div class="tile" id="tileClassifications">
+        <div class="tile-icon">📤</div>
+        <div class="tile-title">Classifications Exporter</div>
+        <div class="tile-desc">Export your classification tree to Excel with hierarchy paths, IDs, localized names, and optional record counts.</div>
+      </div>
+
+      <div class="tile" id="tileDataModel">
+        <div class="tile-icon">🗂️</div>
+        <div class="tile-title">Data Model Explorer</div>
+        <div class="tile-desc">Browse fields, field groups, and record types from your Aprimo configuration.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Classifications tool view -->
+  <section id="toolView" class="hidden">
+    <div class="row" style="margin-bottom:12px">
+      <h2 style="margin:0">Export Classifications</h2>
+      <div class="spacer"></div>
+      <button id="reloadBtn">Reload</button>
+    </div>
+    <p class="muted small" style="margin-top:0">Select classification nodes, choose languages, then export to Excel.
+      Each row includes hierarchy path, ID, system name, localized names, parent info, and optional record counts.</p>
+
+    <div id="loadStatus" class="muted" style="padding:16px 0"></div>
+    <div id="loadErr" class="err hidden"></div>
+
+    <div id="toolBody" class="hidden">
+      <div class="row" style="margin-bottom:10px">
+        <input id="searchBox" type="text" placeholder="Search classifications…" style="max-width:320px" />
+        <button id="selectAllBtn">Select All</button>
+        <button id="deselectAllBtn">Deselect All</button>
+        <span id="selCount" class="muted small mono"></span>
+      </div>
+
+      <div id="tree"></div>
+
+      <div id="langWrap" style="margin-top:12px">
+        <div class="row small" style="margin-bottom:6px">
+          <strong>Export labels for:</strong>
+          <button id="langAll" class="pill">All</button>
+          <button id="langNone" class="pill">None</button>
+        </div>
+        <div id="langPills" class="row"></div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <label class="row small" style="gap:6px; cursor:pointer">
+          <input id="includeCount" type="checkbox" /> Include record count
+        </label>
+        <span id="countErr" class="small" style="color:var(--danger)"></span>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="exportBtn" class="primary">Export to Excel</button>
+        <span id="exportStatus" class="muted small"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Model Explorer view -->
+  <section id="dataModelView" class="hidden" style="display:flex;flex-direction:column;height:calc(100vh - 110px)">
+    <div class="row" style="margin-bottom:8px;flex-shrink:0">
+      <div>
+        <h2 style="margin:0">Data Model Explorer</h2>
+        <p class="muted small" style="margin:4px 0 0">Select a field definition to see where it is used across content types, classifications, and field groups.</p>
+      </div>
+      <div class="spacer"></div>
+      <button id="dmReloadBtn">Reload</button>
+    </div>
+
+    <div id="dataModelStatus" class="muted small" style="padding:8px 0;flex-shrink:0"></div>
+    <div id="dataModelErr" class="err hidden" style="flex-shrink:0"></div>
+
+    <div id="dataModelBody" style="display:none;flex-direction:column;flex:1;min-height:0">
+      <div class="dm-panels">
+        <!-- Left: field definition picker -->
+        <div class="dm-left">
+          <div class="dm-left-header">
+            <input id="dmSearch" type="text" placeholder="Search field definitions…" style="margin-bottom:6px" />
+            <div id="dmCount" class="muted small"></div>
+          </div>
+          <div id="dmFdList"></div>
+        </div>
+
+        <!-- Right: summary bar + graph + detail -->
+        <div class="dm-right">
+          <div id="dmSummaryBar"></div>
+          <div style="flex:1;position:relative;display:flex;min-height:0">
+            <div id="dmEmpty" style="display:flex">
+              <div style="font-size:36px;opacity:.2">◈</div>
+              <div>Select a field definition to see its usage</div>
+            </div>
+            <div id="dmGraph" style="flex:1;position:absolute;inset:0"></div>
+            <div id="dmDetail"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+<script src="./bundle.js"></script>
+</body>
+</html>

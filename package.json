@@ -1,0 +1,51 @@
+{
+  "name": "aprimo-admin-tools",
+  "version": "1.0.0",
+  "description": "Standalone desktop admin tools for Aprimo — classifications exporter, data model explorer, and more.",
+  "main": "electron/main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "bundle": "esbuild renderer/app.js --bundle --format=iife --outfile=renderer/bundle.js --platform=browser",
+    "prestart": "npm run bundle",
+    "prebuild": "npm run bundle"
+  },
+  "dependencies": {
+    "aprimo-js": "^2.3.0",
+    "cytoscape": "^3.34.3",
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "esbuild": "^0.28.2"
+  },
+  "build": {
+    "appId": "com.aprimo.admin-tools",
+    "productName": "Aprimo Admin Tools",
+    "icon": "build/icon.png",
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
