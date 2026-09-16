@@ -43,7 +43,9 @@ Two things to verify on the Aprimo side:
 
 ### Security note
 
-The secret is entered at runtime and stored encrypted on each user's machine. Scope this registration to the **minimum permissions needed** (ideally read-only) so a leaked secret limits exposure to reading data rather than modifying the DAM.
+Your Client ID and Secret are encrypted using your OS keychain key and stored locally on this machine. They are sent only to Aprimo over HTTPS during the OAuth token exchange — never transmitted anywhere else by the application.
+
+Embedding a client secret in a desktop application is acceptable for internal tooling, but is not recommended for broader distribution. For production or team use, a server-side token broker that keeps the secret off client machines is the recommended approach. Scope this registration to the **minimum permissions needed** (ideally read-only) so that if a secret is ever compromised, exposure is limited to reading data rather than modifying the DAM.
 
 ## Run locally
 
