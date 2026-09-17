@@ -45,7 +45,7 @@ Two things to verify on the Aprimo side:
 
 Your Client ID and Secret are encrypted using your OS keychain key and stored locally on this machine. They are sent only to Aprimo over HTTPS during the OAuth token exchange — never transmitted anywhere else by the application.
 
-To keep deployment simple for this sample tool, the client secret is stored locally on each machine rather than behind a server-side token broker. Because the tool uses PKCE with the signed-in user's credentials, it inherits that user's full Aprimo permissions — there is no way to restrict scope at the registration level. For a production build, consider rethinking the auth model: a dedicated service account with read-only permissions, or a server-side token broker that authenticates with a least-privilege identity, would reduce exposure.
+To keep deployment simple for this sample tool, the client secret is stored locally on each machine rather than behind a server-side token broker. Because the tool uses PKCE with the signed-in user's credentials, it inherits that user's full Aprimo permissions — there is no way to restrict scope at the registration level. For a production build, consider rethinking the auth model: a dedicated service account with read-only permissions, or a server-side token broker that authenticates with a least-privilege identity.
 
 ## Run locally
 
