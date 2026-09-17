@@ -1,10 +1,10 @@
 {
   "name": "aprimo-admin-tools",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Standalone desktop admin tools for Aprimo — classifications exporter, data model explorer, and more.",
   "main": "electron/main.js",
   "author": "",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
